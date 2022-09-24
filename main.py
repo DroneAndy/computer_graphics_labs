@@ -71,9 +71,20 @@ def move_letter(change, delta_x, delta_y):
 
 
 def resize_letter(change, size_x, size_y):
+    s = 200  # FIXME change to center coordinates
+    t = 300
+    change = numpy.matmul(change, numpy.matrix([[1, 0, -s],
+                                                [0, 1, -t],
+                                                [0, 0, 1]]).transpose())
     change = numpy.matmul(change, numpy.matrix([[size_x, 0, 0],
                                                 [0, size_y, 0],
                                                 [0, 0, 1]]).transpose())
+    change = numpy.matmul(change, numpy.matrix([[1, 0, s],
+                                                [0, 1, t],
+                                                [0, 0, 1]]).transpose())
+    # change = numpy.matmul(change, numpy.matrix([[size_x, 0, 0],
+    #                                             [0, size_y, 0],
+    #                                             [0, 0, 1]]).transpose())
     return change
 
 
@@ -136,9 +147,9 @@ class Example(QMainWindow):
         elif command == "y-":
             self.changes = resize_letter(self.changes, 1, 0.75)
         elif command == "rot+":
-            self.changes = rotate(self.changes, 0.5)
+            self.changes = rotate(self.changes, math.pi / 10)
         elif command == "rot-":
-            self.changes = rotate(self.changes, -0.5)
+            self.changes = rotate(self.changes, -math.pi / 10)
         elif command == "refl_x":
             self.changes = resize_letter(self.changes, -1, 1)
         elif command == "refl_y":
