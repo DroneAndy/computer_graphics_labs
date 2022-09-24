@@ -6,6 +6,10 @@ import numpy
 import math
 # TODO отражение
 
+BUTTON_Y = 600
+BUTTON_X = 100
+BUTTON_DELTA_Y = 50
+
 
 class Point:
     x = 0
@@ -83,45 +87,27 @@ class Example(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        btn_move_left = QPushButton("left", self)
-        btn_move_left.move(100, 600)
-        btn_move_left.clicked.connect(self.btn_clicked)
-
-        btn_move_right = QPushButton("right", self)
-        btn_move_right.move(200, 600)
-        btn_move_right.clicked.connect(self.btn_clicked)
-
-        btn_move_up = QPushButton("up", self)
-        btn_move_up.move(300, 600)
-        btn_move_up.clicked.connect(self.btn_clicked)
-
-        btn_move_down = QPushButton("down", self)
-        btn_move_down.move(400, 600)
-        btn_move_down.clicked.connect(self.btn_clicked)
-
-        btn_move_down = QPushButton("x+", self)
-        btn_move_down.move(100, 700)
-        btn_move_down.clicked.connect(self.btn_clicked)
-
-        btn_move_down = QPushButton("x-", self)
-        btn_move_down.move(200, 700)
-        btn_move_down.clicked.connect(self.btn_clicked)
-
-        btn_move_down = QPushButton("y+", self)
-        btn_move_down.move(300, 700)
-        btn_move_down.clicked.connect(self.btn_clicked)
-
-        btn_move_down = QPushButton("y-", self)
-        btn_move_down.move(400, 700)
-        btn_move_down.clicked.connect(self.btn_clicked)
-
-        btn_move_down = QPushButton("rot+", self)
-        btn_move_down.move(500, 700)
-        btn_move_down.clicked.connect(self.btn_clicked)
-
-        btn_move_down = QPushButton("rot-", self)
-        btn_move_down.move(600, 700)
-        btn_move_down.clicked.connect(self.btn_clicked)
+        button_array = [QPushButton("left", self),
+                        QPushButton("right", self),
+                        QPushButton("up", self),
+                        QPushButton("down", self),
+                        QPushButton("refl_x", self),
+                        QPushButton("refl_y", self),
+                        QPushButton("x+", self),
+                        QPushButton("x-", self),
+                        QPushButton("y+", self),
+                        QPushButton("y-", self),
+                        QPushButton("rot+", self),
+                        QPushButton("rot-", self)]
+        i = 1
+        delta_y = 0
+        for button in button_array:
+            if i > (len(button_array) / 2):
+                i = 1
+                delta_y = BUTTON_DELTA_Y
+            button.move(BUTTON_X * i, BUTTON_Y + delta_y)
+            button.clicked.connect(self.btn_clicked)
+            i += 1
 
         self.statusBar()
         self.pix = QPixmap(400, 400)
