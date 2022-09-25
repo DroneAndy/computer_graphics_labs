@@ -28,9 +28,10 @@ share/python-wheels/
 MANIFEST
 Comments
 conf.py
-index.rst
-make.bat
+*.rst
+*.bat
 Makefile
+Test.py
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
