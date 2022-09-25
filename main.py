@@ -2,36 +2,55 @@ import sys
 from PyQt5.QtWidgets import QApplication, QPushButton, QMainWindow
 from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtCore import Qt
-import numpy
+import numpy as np
 import math
 
 BUTTON_Y = 600
+""" Y координата первой кнопки """
+
 BUTTON_X = 100
+""" X координата первой кнопки """
+
 BUTTON_DELTA_Y = 50
+""" Смещение второго и последующих рядов кнопок по оси Y относительно предыдущего ряда """
 
 
 class Point:
+    """ Класс точка """
+
     x = 0
+    """ Координата X """
+
     y = 0
+    """ Координата Y """
 
     def __init__(self, _x, _y):
+        """ Конструктор класса """
         self.x = _x
         self.y = _y
 
 
 class Line:
+    """ Класс линия """
+
     a = Point(0, 0)
+    """ Точка A """
+
     b = Point(0, 0)
+    """ Точка B """
 
     def __init__(self, _a, _b):
+        """ Конструктор класса """
         self.a = _a
         self.b = _b
 
 
 class Polygon:
+    """ Класс многоугольник """
     lines = []
 
     def __init__(self, _lines):
+        """ Конструктор класса """
         self.lines = _lines
 
 
@@ -49,9 +68,14 @@ Inner_polygon = Polygon(Lines)
 Polygons = [Outer_polygon, Inner_polygon]
 
 
-class Example(QMainWindow):
-    changes = numpy.matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+class Main(QMainWindow):
+    """ Основной класс с приложением """
+
+    changes = np.matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    """ Матрица изменений """
+
     center = Point(200, 300)
+    """ Центральная точка фигуры, относительно которой происходит поворот """
 
     def __init__(self):
         super().__init__()
@@ -90,6 +114,7 @@ class Example(QMainWindow):
         self.show()
 
     def btn_clicked(self):
+        """ Обработчик события нажатия кнопки """
         command = self.sender().text()
         # TODO rewrite to match-case (update python to 3.10)
         if command == "right":
@@ -119,49 +144,72 @@ class Example(QMainWindow):
         self.update()
 
     def paintEvent(self, e):
+        """ Обработчик события отрисовки """
         qp = QPainter()
         qp.begin(self)
         self.draw_letter(qp)
         qp.end()
 
     def draw_letter(self, qp):
+        """
+        Функция рисования буквы
+        :param qp: Объект типа QPainter
+        :return: Ничего
+        """
         self.pix.fill(Qt.white)
         qp.setPen(Qt.red)
         for polygon in Polygons:
             for line in polygon.lines:
-                new_a = numpy.matmul([[line.a.x, line.a.y, 1]], self.changes)
-                new_b = numpy.matmul([[line.b.x, line.b.y, 1]], self.changes)
+                new_a = np.matmul([[line.a.x, line.a.y, 1]], self.changes)
+                new_b = np.matmul([[line.b.x, line.b.y, 1]], self.changes)
                 qp.drawLine(int(new_a.item(0)), int(new_a.item(1)), int(new_b.item(0)), int(new_b.item(1)))
 
     def rotate_letter(self, angle):
-        self.changes = numpy.matmul(self.changes, numpy.matrix([[1, 0, -self.center.x],
+        """
+        Функция поворота буквы
+        :param angle: Угол поворота
+        :return: Ничего
+        """
+        self.changes = np.matmul(self.changes, np.matrix([[1, 0, -self.center.x],
                                                                 [0, 1, -self.center.y],
                                                                 [0, 0, 1]]).transpose())
-        self.changes = numpy.matmul(self.changes, numpy.matrix([[math.cos(angle), -math.sin(angle), 0],
+        self.changes = np.matmul(self.changes, np.matrix([[math.cos(angle), -math.sin(angle), 0],
                                                                 [math.sin(angle), math.cos(angle), 0],
                                                                 [0, 0, 1]]).transpose())
-        self.changes = numpy.matmul(self.changes, numpy.matrix([[1, 0, self.center.x],
+        self.changes = np.matmul(self.changes, np.matrix([[1, 0, self.center.x],
                                                                 [0, 1, self.center.y],
                                                                 [0, 0, 1]]).transpose())
 
     def move_letter(self, delta_x, delta_y):
-        self.changes = numpy.matmul(self.changes, [[1, 0, 0], [0, 1, 0], [delta_x, delta_y, 1]])
+        """
+        Функция перемещения буквы
+        :param delta_x: Изменение координаты X
+        :param delta_y: Изменение координаты Y
+        :return: Ничего
+        """
+        self.changes = np.matmul(self.changes, [[1, 0, 0], [0, 1, 0], [delta_x, delta_y, 1]])
         self.center.x += delta_x
         self.center.y += delta_y
 
     def resize_letter(self, size_x, size_y):
-        self.changes = numpy.matmul(self.changes, numpy.matrix([[1, 0, -self.center.x],
+        """
+        Функция масштабирования буквы
+        :param size_x: Коэффициент масштабирования по оси X
+        :param size_y: Коэффициент масштабирования по оси Y
+        :return: Ничего
+        """
+        self.changes = np.matmul(self.changes, np.matrix([[1, 0, -self.center.x],
                                                                 [0, 1, -self.center.y],
                                                                 [0, 0, 1]]).transpose())
-        self.changes = numpy.matmul(self.changes, numpy.matrix([[size_x, 0, 0],
+        self.changes = np.matmul(self.changes, np.matrix([[size_x, 0, 0],
                                                                 [0, size_y, 0],
                                                                 [0, 0, 1]]).transpose())
-        self.changes = numpy.matmul(self.changes, numpy.matrix([[1, 0, self.center.x],
+        self.changes = np.matmul(self.changes, np.matrix([[1, 0, self.center.x],
                                                                 [0, 1, self.center.y],
                                                                 [0, 0, 1]]).transpose())
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = Example()
+    ex = Main()
     sys.exit(app.exec_())
