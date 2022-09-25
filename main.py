@@ -1,10 +1,9 @@
-import sys, random
-from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QMainWindow
-from PyQt5.QtGui import QPainter, QColor, QPen, QPixmap
+import sys
+from PyQt5.QtWidgets import QApplication, QPushButton, QMainWindow
+from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtCore import Qt
 import numpy
 import math
-# TODO отражение
 
 BUTTON_Y = 600
 BUTTON_X = 100
@@ -50,46 +49,9 @@ Inner_polygon = Polygon(Lines)
 Polygons = [Outer_polygon, Inner_polygon]
 
 
-def rotate(change, angle):
-    s = 200  # FIXME change to center coordinates
-    t = 300
-    change = numpy.matmul(change, numpy.matrix([[1, 0, -s],
-                                                [0, 1, -t],
-                                                [0, 0, 1]]).transpose())
-    change = numpy.matmul(change, numpy.matrix([[math.cos(angle), -math.sin(angle), 0],
-                                                [math.sin(angle), math.cos(angle), 0],
-                                                [0, 0, 1]]).transpose())
-    change = numpy.matmul(change, numpy.matrix([[1, 0, s],
-                                                [0, 1, t],
-                                                [0, 0, 1]]).transpose())
-    return change
-
-
-def move_letter(change, delta_x, delta_y):
-    change = numpy.matmul(change, [[1, 0, 0], [0, 1, 0], [delta_x, delta_y, 1]])
-    return change
-
-
-def resize_letter(change, size_x, size_y):
-    s = 200  # FIXME change to center coordinates
-    t = 300
-    change = numpy.matmul(change, numpy.matrix([[1, 0, -s],
-                                                [0, 1, -t],
-                                                [0, 0, 1]]).transpose())
-    change = numpy.matmul(change, numpy.matrix([[size_x, 0, 0],
-                                                [0, size_y, 0],
-                                                [0, 0, 1]]).transpose())
-    change = numpy.matmul(change, numpy.matrix([[1, 0, s],
-                                                [0, 1, t],
-                                                [0, 0, 1]]).transpose())
-    # change = numpy.matmul(change, numpy.matrix([[size_x, 0, 0],
-    #                                             [0, size_y, 0],
-    #                                             [0, 0, 1]]).transpose())
-    return change
-
-
 class Example(QMainWindow):
     changes = numpy.matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    center = Point(200, 300)
 
     def __init__(self):
         super().__init__()
@@ -131,29 +93,29 @@ class Example(QMainWindow):
         command = self.sender().text()
         # TODO rewrite to match-case (update python to 3.10)
         if command == "right":
-            self.changes = move_letter(self.changes, 50, 0)
+            self.move_letter(50, 0)
         elif command == "left":
-            self.changes = move_letter(self.changes, -50, 0)
+            self.move_letter(-50, 0)
         elif command == "up":
-            self.changes = move_letter(self.changes, 0, -50)
+            self.move_letter(0, -50)
         elif command == "down":
-            self.changes = move_letter(self.changes, 0, 50)
+            self.move_letter(0, 50)
         elif command == "x+":
-            self.changes = resize_letter(self.changes, 1.25, 1)
+            self.resize_letter(1.25, 1)
         elif command == "x-":
-            self.changes = resize_letter(self.changes, 0.75, 1)
+            self.resize_letter(0.75, 1)
         elif command == "y+":
-            self.changes = resize_letter(self.changes, 1, 1.25)
+            self.resize_letter(1, 1.25)
         elif command == "y-":
-            self.changes = resize_letter(self.changes, 1, 0.75)
+            self.resize_letter(1, 0.75)
         elif command == "rot+":
-            self.changes = rotate(self.changes, math.pi / 10)
+            self.rotate_letter(math.pi / 10)
         elif command == "rot-":
-            self.changes = rotate(self.changes, -math.pi / 10)
+            self.rotate_letter(-math.pi / 10)
         elif command == "refl_x":
-            self.changes = resize_letter(self.changes, -1, 1)
+            self.resize_letter(-1, 1)
         elif command == "refl_y":
-            self.changes = resize_letter(self.changes, 1, -1)
+            self.resize_letter(1, -1)
         self.update()
 
     def paintEvent(self, e):
@@ -171,10 +133,35 @@ class Example(QMainWindow):
                 new_b = numpy.matmul([[line.b.x, line.b.y, 1]], self.changes)
                 qp.drawLine(int(new_a.item(0)), int(new_a.item(1)), int(new_b.item(0)), int(new_b.item(1)))
 
+    def rotate_letter(self, angle):
+        self.changes = numpy.matmul(self.changes, numpy.matrix([[1, 0, -self.center.x],
+                                                                [0, 1, -self.center.y],
+                                                                [0, 0, 1]]).transpose())
+        self.changes = numpy.matmul(self.changes, numpy.matrix([[math.cos(angle), -math.sin(angle), 0],
+                                                                [math.sin(angle), math.cos(angle), 0],
+                                                                [0, 0, 1]]).transpose())
+        self.changes = numpy.matmul(self.changes, numpy.matrix([[1, 0, self.center.x],
+                                                                [0, 1, self.center.y],
+                                                                [0, 0, 1]]).transpose())
+
+    def move_letter(self, delta_x, delta_y):
+        self.changes = numpy.matmul(self.changes, [[1, 0, 0], [0, 1, 0], [delta_x, delta_y, 1]])
+        self.center.x += delta_x
+        self.center.y += delta_y
+
+    def resize_letter(self, size_x, size_y):
+        self.changes = numpy.matmul(self.changes, numpy.matrix([[1, 0, -self.center.x],
+                                                                [0, 1, -self.center.y],
+                                                                [0, 0, 1]]).transpose())
+        self.changes = numpy.matmul(self.changes, numpy.matrix([[size_x, 0, 0],
+                                                                [0, size_y, 0],
+                                                                [0, 0, 1]]).transpose())
+        self.changes = numpy.matmul(self.changes, numpy.matrix([[1, 0, self.center.x],
+                                                                [0, 1, self.center.y],
+                                                                [0, 0, 1]]).transpose())
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = Example()
     sys.exit(app.exec_())
-
-# autodoc
