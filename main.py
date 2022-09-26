@@ -116,31 +116,19 @@ class Main(QMainWindow):
     def btn_clicked(self):
         """ Обработчик события нажатия кнопки """
         command = self.sender().text()
-        # TODO rewrite to match-case (update python to 3.10)
-        if command == "right":
-            self.move_letter(50, 0)
-        elif command == "left":
-            self.move_letter(-50, 0)
-        elif command == "up":
-            self.move_letter(0, -50)
-        elif command == "down":
-            self.move_letter(0, 50)
-        elif command == "x+":
-            self.resize_letter(1.25, 1)
-        elif command == "x-":
-            self.resize_letter(0.75, 1)
-        elif command == "y+":
-            self.resize_letter(1, 1.25)
-        elif command == "y-":
-            self.resize_letter(1, 0.75)
-        elif command == "rot+":
-            self.rotate_letter(math.pi / 10)
-        elif command == "rot-":
-            self.rotate_letter(-math.pi / 10)
-        elif command == "refl_x":
-            self.resize_letter(-1, 1)
-        elif command == "refl_y":
-            self.resize_letter(1, -1)
+        match command:
+            case "right": self.move_letter(50, 0)
+            case "left": self.move_letter(-50, 0)
+            case "up": self.move_letter(0, -50)
+            case "down": self.move_letter(0, 50)
+            case "x+": self.resize_letter(1.25, 1)
+            case "x-": self.resize_letter(0.75, 1)
+            case "y+": self.resize_letter(1, 1.25)
+            case "y-": self.resize_letter(1, 0.75)
+            case "rot+": self.rotate_letter(math.pi / 10)
+            case "rot-": self.rotate_letter(-math.pi / 10)
+            case "refl_x": self.resize_letter(-1, 1)
+            case "refl_y": self.resize_letter(1, -1)
         self.update()
 
     def paintEvent(self, e):
