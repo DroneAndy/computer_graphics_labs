@@ -24,19 +24,23 @@ class Point:
     y = 0
     """ Координата Y """
 
-    def __init__(self, _x, _y):
+    z = 0
+    """ Координата Z """
+
+    def __init__(self, _x, _y, _z):
         """ Конструктор класса """
         self.x = _x
         self.y = _y
+        self.z = _z
 
 
 class Line:
     """ Класс линия """
 
-    a = Point(0, 0)
+    a = Point(0, 0, 0)
     """ Точка A """
 
-    b = Point(0, 0)
+    b = Point(0, 0, 0)
     """ Точка B """
 
     def __init__(self, _a, _b):
@@ -55,26 +59,59 @@ class Polygon:
 
 
 # FIXME change coordinates to center of the letter
-Lines = [Line(Point(100, 100), Point(100, 500)),
-         Line(Point(100, 500), Point(300, 500)),
-         Line(Point(300, 500), Point(300, 100)),
-         Line(Point(300, 100), Point(100, 100))]
+Lines = [Line(Point(100, 100, 0), Point(100, 500, 0)),
+         Line(Point(100, 500, 0), Point(300, 500, 0)),
+         Line(Point(300, 500, 0), Point(300, 100, 0)),
+         Line(Point(300, 100, 0), Point(100, 100, 0))]
 Outer_polygon = Polygon(Lines)
-Lines = [Line(Point(150, 150), Point(150, 450)),
-         Line(Point(150, 450), Point(250, 450)),
-         Line(Point(250, 450), Point(250, 150)),
-         Line(Point(250, 150), Point(150, 150))]
+Lines = [Line(Point(150, 150, 0), Point(150, 450, 0)),
+         Line(Point(150, 450, 0), Point(250, 450, 0)),
+         Line(Point(250, 450, 0), Point(250, 150, 0)),
+         Line(Point(250, 150, 0), Point(150, 150, 0))]
 Inner_polygon = Polygon(Lines)
-Polygons = [Outer_polygon, Inner_polygon]
+Lines = [Line(Point(150, 150, 100), Point(150, 450, 100)),
+         Line(Point(150, 450, 100), Point(250, 450, 100)),
+         Line(Point(250, 450, 100), Point(250, 150, 100)),
+         Line(Point(250, 150, 100), Point(150, 150, 100))]
+Inner_polygon_rear = Polygon(Lines)
+Lines = [Line(Point(100, 100, 100), Point(100, 500, 100)),
+         Line(Point(100, 500, 100), Point(300, 500, 100)),
+         Line(Point(300, 500, 100), Point(300, 100, 100)),
+         Line(Point(300, 100, 100), Point(100, 100, 100))]
+Outer_polygon_rear = Polygon(Lines)
+Lines = [Line(Point(100, 100, 0), Point(100, 100, 100)),
+         Line(Point(100, 500, 0), Point(100, 500, 100)),
+         Line(Point(100, 500, 0), Point(100, 100, 0)),
+         Line(Point(100, 500, 100), Point(100, 100, 100))]
+right_polygon = Polygon(Lines)
+Lines = [Line(Point(300, 100, 0), Point(300, 100, 100)),
+         Line(Point(300, 500, 0), Point(300, 500, 100)),
+         Line(Point(300, 500, 0), Point(300, 100, 0)),
+         Line(Point(300, 500, 100), Point(300, 100, 100))]
+left_polygon = Polygon(Lines)
+Lines = [Line(Point(150, 150, 0), Point(150, 150, 100)),
+         Line(Point(150, 450, 0), Point(150, 450, 100)),
+         Line(Point(150, 450, 0), Point(150, 150, 0)),
+         Line(Point(150, 450, 100), Point(150, 150, 100))]
+right_inner_polygon = Polygon(Lines)
+Lines = [Line(Point(250, 150, 0), Point(250, 150, 100)),
+         Line(Point(250, 450, 0), Point(250, 450, 100)),
+         Line(Point(250, 450, 0), Point(250, 150, 0)),
+         Line(Point(250, 450, 100), Point(250, 150, 100))]
+left_inner_polygon = Polygon(Lines)
+Polygons = [Outer_polygon, Inner_polygon, Outer_polygon_rear, Inner_polygon_rear, right_polygon, left_polygon, right_inner_polygon, left_inner_polygon]
 
 
 class Main(QMainWindow):
     """ Основной класс с приложением """
 
-    changes = np.matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    changes = np.matrix([[1, 0, 0, 0],
+                         [0, 1, 0, 0],
+                         [0, 0, 1, 0],
+                         [0, 0, 0, 1]])
     """ Матрица изменений """
 
-    center = Point(200, 300)
+    center = Point(200, 300, 0)
     """ Центральная точка фигуры, относительно которой происходит поворот """
 
     def __init__(self):
@@ -94,8 +131,14 @@ class Main(QMainWindow):
                         QPushButton("x-", self),
                         QPushButton("y+", self),
                         QPushButton("y-", self),
-                        QPushButton("rot+", self),
-                        QPushButton("rot-", self)]
+                        QPushButton("z+", self),
+                        QPushButton("z-", self),
+                        QPushButton("rot_x+", self),
+                        QPushButton("rot_x-", self),
+                        QPushButton("rot_y+", self),
+                        QPushButton("rot_y-", self),
+                        QPushButton("rot_z+", self),
+                        QPushButton("rot_z-", self)]
         i = 1
         delta_y = 0
         for button in button_array:
@@ -117,18 +160,24 @@ class Main(QMainWindow):
         """ Обработчик события нажатия кнопки """
         command = self.sender().text()
         match command:
-            case "right": self.move_letter(50, 0)
-            case "left": self.move_letter(-50, 0)
-            case "up": self.move_letter(0, -50)
-            case "down": self.move_letter(0, 50)
-            case "x+": self.resize_letter(1.25, 1)
-            case "x-": self.resize_letter(0.75, 1)
-            case "y+": self.resize_letter(1, 1.25)
-            case "y-": self.resize_letter(1, 0.75)
-            case "rot+": self.rotate_letter(math.pi / 10)
-            case "rot-": self.rotate_letter(-math.pi / 10)
-            case "refl_x": self.resize_letter(-1, 1)
-            case "refl_y": self.resize_letter(1, -1)
+            case "right": self.move_letter(50, 0, 0)
+            case "left": self.move_letter(-50, 0, 0)
+            case "up": self.move_letter(0, -50, 0)
+            case "down": self.move_letter(0, 50, 0)
+            case "x+": self.resize_letter(1.25, 1, 1)
+            case "x-": self.resize_letter(0.75, 1, 1)
+            case "y+": self.resize_letter(1, 1.25, 1)
+            case "y-": self.resize_letter(1, 0.75, 1)
+            case "z+": self.resize_letter(1, 1, 1.25)
+            case "z-": self.resize_letter(1, 1, 0.75)
+            case "rot_x+": self.rotate_letter(math.pi / 10, 0, 0)
+            case "rot_x-": self.rotate_letter(-math.pi / 10, 0, 0)
+            case "rot_y+": self.rotate_letter(0, math.pi / 10, 0)
+            case "rot_y-": self.rotate_letter(0, -math.pi / 10, 0)
+            case "rot_z+": self.rotate_letter(0, 0, math.pi / 10)
+            case "rot_z-": self.rotate_letter(0, 0, -math.pi / 10)
+            case "refl_x": self.resize_letter(-1, 1, 1)
+            case "refl_y": self.resize_letter(1, -1, 1)
         self.update()
 
     def paintEvent(self, e):
@@ -148,53 +197,71 @@ class Main(QMainWindow):
         qp.setPen(Qt.red)
         for polygon in Polygons:
             for line in polygon.lines:
-                new_a = np.matmul([[line.a.x, line.a.y, 1]], self.changes)
-                new_b = np.matmul([[line.b.x, line.b.y, 1]], self.changes)
+                new_a = np.matmul([[line.a.x, line.a.y, line.a.z, 1]], self.changes)
+                new_b = np.matmul([[line.b.x, line.b.y, line.b.z, 1]], self.changes)
                 qp.drawLine(int(new_a.item(0)), int(new_a.item(1)), int(new_b.item(0)), int(new_b.item(1)))
 
-    def rotate_letter(self, angle):
+    def rotate_letter(self, angle_x, angle_y, angle_z):
         """
         Функция поворота буквы
         :param angle: Угол поворота
         :return: Ничего
         """
-        self.changes = np.matmul(self.changes, np.matrix([[1, 0, -self.center.x],
-                                                                [0, 1, -self.center.y],
-                                                                [0, 0, 1]]).transpose())
-        self.changes = np.matmul(self.changes, np.matrix([[math.cos(angle), -math.sin(angle), 0],
-                                                                [math.sin(angle), math.cos(angle), 0],
-                                                                [0, 0, 1]]).transpose())
-        self.changes = np.matmul(self.changes, np.matrix([[1, 0, self.center.x],
-                                                                [0, 1, self.center.y],
-                                                                [0, 0, 1]]).transpose())
+        self.changes = np.matmul(self.changes, np.matrix([[1, 0, 0, -self.center.x],
+                                                          [0, 1, 0, -self.center.y],
+                                                          [0, 0, 1, -self.center.z],
+                                                          [0, 0, 0, 1]]).transpose())
+        self.changes = np.matmul(self.changes, np.matrix([[math.cos(angle_y), 0, -math.sin(angle_y), 0],
+                                                          [0, 1, 0, 0],
+                                                          [math.sin(angle_y), 0, math.cos(angle_y), 0],
+                                                          [0, 0, 0, 1]]).transpose())
+        self.changes = np.matmul(self.changes, np.matrix([[1, 0, 0, 0],
+                                                          [0, math.cos(angle_x), -math.sin(angle_x), 0],
+                                                          [0, math.sin(angle_x), math.cos(angle_x), 0],
+                                                          [0, 0, 0, 1]]).transpose())
+        self.changes = np.matmul(self.changes, np.matrix([[math.cos(angle_z), -math.sin(angle_z), 0, 0],
+                                                          [math.sin(angle_z), math.cos(angle_z), 0, 0],
+                                                          [0, 0, 1, 0],
+                                                          [0, 0, 0, 1]]).transpose())
+        self.changes = np.matmul(self.changes, np.matrix([[1, 0, 0, self.center.x],
+                                                          [0, 1, 0, self.center.y],
+                                                          [0, 0, 1, self.center.z],
+                                                          [0, 0, 0, 1]]).transpose())
 
-    def move_letter(self, delta_x, delta_y):
+    def move_letter(self, delta_x, delta_y, delta_z):
         """
         Функция перемещения буквы
         :param delta_x: Изменение координаты X
         :param delta_y: Изменение координаты Y
         :return: Ничего
         """
-        self.changes = np.matmul(self.changes, [[1, 0, 0], [0, 1, 0], [delta_x, delta_y, 1]])
+        self.changes = np.matmul(self.changes, [[1, 0, 0, 0],
+                                                [0, 1, 0, 0],
+                                                [0, 0, 1, 0],
+                                                [delta_x, delta_y, delta_z, 1]])
         self.center.x += delta_x
         self.center.y += delta_y
+        self.center.z += delta_z
 
-    def resize_letter(self, size_x, size_y):
+    def resize_letter(self, size_x, size_y, size_z):
         """
         Функция масштабирования буквы
         :param size_x: Коэффициент масштабирования по оси X
         :param size_y: Коэффициент масштабирования по оси Y
         :return: Ничего
         """
-        self.changes = np.matmul(self.changes, np.matrix([[1, 0, -self.center.x],
-                                                                [0, 1, -self.center.y],
-                                                                [0, 0, 1]]).transpose())
-        self.changes = np.matmul(self.changes, np.matrix([[size_x, 0, 0],
-                                                                [0, size_y, 0],
-                                                                [0, 0, 1]]).transpose())
-        self.changes = np.matmul(self.changes, np.matrix([[1, 0, self.center.x],
-                                                                [0, 1, self.center.y],
-                                                                [0, 0, 1]]).transpose())
+        self.changes = np.matmul(self.changes, np.matrix([[1, 0, 0, -self.center.x],
+                                                          [0, 1, 0, -self.center.y],
+                                                          [0, 0, 1, -self.center.z],
+                                                          [0, 0, 0, 1]]).transpose())
+        self.changes = np.matmul(self.changes, np.matrix([[size_x, 0, 0, 0],
+                                                          [0, size_y, 0, 0],
+                                                          [0, 0, size_z, 0],
+                                                          [0, 0, 0, 1]]).transpose())
+        self.changes = np.matmul(self.changes, np.matrix([[1, 0, 0, self.center.x],
+                                                          [0, 1, 0, self.center.y],
+                                                          [0, 0, 1, self.center.z],
+                                                          [0, 0, 0, 1]]).transpose())
 
 
 if __name__ == '__main__':
