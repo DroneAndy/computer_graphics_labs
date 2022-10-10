@@ -1,10 +1,11 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QPushButton, QMainWindow
+from PyQt5.QtWidgets import QApplication, QPushButton, QMainWindow, QLineEdit
 from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtCore import Qt
+from numpy import linalg as LA
 import numpy as np
 import math
-
+Rotat
 BUTTON_Y = 600
 """ Y координата первой кнопки """
 
@@ -99,7 +100,8 @@ Lines = [Line(Point(250, 150, 0), Point(250, 150, 100)),
          Line(Point(250, 450, 0), Point(250, 150, 0)),
          Line(Point(250, 450, 100), Point(250, 150, 100))]
 left_inner_polygon = Polygon(Lines)
-Polygons = [Outer_polygon, Inner_polygon, Outer_polygon_rear, Inner_polygon_rear, right_polygon, left_polygon, right_inner_polygon, left_inner_polygon]
+Polygons = [Outer_polygon, Inner_polygon, Outer_polygon_rear, Inner_polygon_rear,
+            right_polygon, left_polygon, right_inner_polygon, left_inner_polygon]
 
 
 class Main(QMainWindow):
@@ -114,6 +116,10 @@ class Main(QMainWindow):
     center = Point(200, 300, 0)
     """ Центральная точка фигуры, относительно которой происходит поворот """
 
+    x = 0
+    y = 0
+    z = 0
+
     def __init__(self):
         super().__init__()
         self.pix = QPixmap()
@@ -121,6 +127,16 @@ class Main(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        coordinates = QLineEdit(self)
+        coordinates.setInputMask("(999,999,999)")
+        coordinates.setText("(0,0,0)")
+        coordinates.move(650, 100)
+        coordinates.resize(100, 32)
+        coordinates.setAlignment(Qt.AlignCenter)
+        coordinates.textChanged[str].connect(self.save_coordinates)
+        rotate = QPushButton("rotate", self)
+        rotate.move(650, 150)
+        rotate.clicked.connect(self.btn_clicked)
         button_array = [QPushButton("left", self),
                         QPushButton("right", self),
                         QPushButton("up", self),
@@ -142,9 +158,9 @@ class Main(QMainWindow):
         i = 1
         delta_y = 0
         for button in button_array:
-            if i > (len(button_array) / 2):
+            if i > 6:
                 i = 1
-                delta_y = BUTTON_DELTA_Y
+                delta_y += BUTTON_DELTA_Y
             button.move(BUTTON_X * i, BUTTON_Y + delta_y)
             button.clicked.connect(self.btn_clicked)
             i += 1
@@ -155,6 +171,12 @@ class Main(QMainWindow):
         self.setGeometry(300, 200, 800, 800)
         self.setWindowTitle('Points')
         self.show()
+
+    def save_coordinates(self, text):
+        coordinates = text[1:-1].split(",")
+        self.x = int(coordinates[0])
+        self.y = int(coordinates[1])
+        self.z = int(coordinates[2])
 
     def btn_clicked(self):
         """ Обработчик события нажатия кнопки """
@@ -178,6 +200,7 @@ class Main(QMainWindow):
             case "rot_z-": self.rotate_letter(0, 0, -math.pi / 10)
             case "refl_x": self.resize_letter(-1, 1, 1)
             case "refl_y": self.resize_letter(1, -1, 1)
+            case "rotate": self.rotate_relative_to_beam(self.x, self.y, self.z, math.pi / 10)
         self.update()
 
     def paintEvent(self, e):
@@ -262,6 +285,27 @@ class Main(QMainWindow):
                                                           [0, 1, 0, self.center.y],
                                                           [0, 0, 1, self.center.z],
                                                           [0, 0, 0, 1]]).transpose())
+
+    def rotate_relative_to_beam(self, l, m, n, fi):
+        Ry = np.matrix([[l/math.sqrt(l*l + n*n), 0, -n/math.sqrt(l*l + n*n), 0],
+                        [0, 1, 0, 0],
+                        [n/math.sqrt(l*l + n*n), 0, l/math.sqrt(l*l + n*n), 0],
+                        [0, 0, 0, 1]])
+
+        Rz = np.matrix([[m/math.sqrt(l*l + n*n + m*m), -math.sqrt(l*l + n*n)/math.sqrt(l*l + n*n + m*m), 0, 0],
+                        [math.sqrt(l*l + n*n)/math.sqrt(l*l + n*n + m*m), m/math.sqrt(l*l + n*n + m*m), 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]])
+
+        Rfi = np.matrix([[math.cos(fi), 0, -math.sin(fi), 0],
+                         [0, 1, 0, 0],
+                         [math.sin(fi), 0, math.cos(fi), 0],
+                         [0, 0, 0, 1]])
+        self.changes = np.matmul(self.changes, Ry.transpose())
+        self.changes = np.matmul(self.changes, Rz.transpose())
+        self.changes = np.matmul(self.changes, Rfi.transpose())
+        self.changes = np.matmul(self.changes, LA.inv(Rz).transpose())
+        self.changes = np.matmul(self.changes, LA.inv(Ry).transpose())
 
 
 if __name__ == '__main__':
