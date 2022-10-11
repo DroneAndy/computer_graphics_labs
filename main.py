@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from numpy import linalg as LA
 import numpy as np
 import math
-Rotat
+
 BUTTON_Y = 600
 """ Y координата первой кнопки """
 
@@ -117,8 +117,11 @@ class Main(QMainWindow):
     """ Центральная точка фигуры, относительно которой происходит поворот """
 
     x = 0
+    """ Координата X луча """
     y = 0
+    """ Координата Y луча """
     z = 0
+    """ Координата Z луча """
 
     def __init__(self):
         super().__init__()
@@ -227,7 +230,9 @@ class Main(QMainWindow):
     def rotate_letter(self, angle_x, angle_y, angle_z):
         """
         Функция поворота буквы
-        :param angle: Угол поворота
+        :param angle_x: Угол поворота относительно оси X
+        :param angle_y: Угол поворота относительно оси Y
+        :param angle_z: Угол поворота относительно оси Z
         :return: Ничего
         """
         self.changes = np.matmul(self.changes, np.matrix([[1, 0, 0, -self.center.x],
@@ -256,6 +261,7 @@ class Main(QMainWindow):
         Функция перемещения буквы
         :param delta_x: Изменение координаты X
         :param delta_y: Изменение координаты Y
+        :param delta_z: Изменение координаты Z
         :return: Ничего
         """
         self.changes = np.matmul(self.changes, [[1, 0, 0, 0],
@@ -271,6 +277,7 @@ class Main(QMainWindow):
         Функция масштабирования буквы
         :param size_x: Коэффициент масштабирования по оси X
         :param size_y: Коэффициент масштабирования по оси Y
+        :param size_z: Коэффициент масштабирования по оси Z
         :return: Ничего
         """
         self.changes = np.matmul(self.changes, np.matrix([[1, 0, 0, -self.center.x],
@@ -287,20 +294,29 @@ class Main(QMainWindow):
                                                           [0, 0, 0, 1]]).transpose())
 
     def rotate_relative_to_beam(self, l, m, n, fi):
+        """
+        Функция для поворота буквы относительно произвольного луча
+        :param l: Координата X
+        :param m: Координата X
+        :param n: Координата X
+        :param fi: Угол поворота
+        :return: Ничего
+        """
         Ry = np.matrix([[l/math.sqrt(l*l + n*n), 0, -n/math.sqrt(l*l + n*n), 0],
                         [0, 1, 0, 0],
                         [n/math.sqrt(l*l + n*n), 0, l/math.sqrt(l*l + n*n), 0],
                         [0, 0, 0, 1]])
-
+        """ Матрица перемещения луча в плоскость xOy"""
         Rz = np.matrix([[m/math.sqrt(l*l + n*n + m*m), -math.sqrt(l*l + n*n)/math.sqrt(l*l + n*n + m*m), 0, 0],
                         [math.sqrt(l*l + n*n)/math.sqrt(l*l + n*n + m*m), m/math.sqrt(l*l + n*n + m*m), 0, 0],
                         [0, 0, 1, 0],
                         [0, 0, 0, 1]])
-
+        """ Матрица совмещения луча с ось oY """
         Rfi = np.matrix([[math.cos(fi), 0, -math.sin(fi), 0],
                          [0, 1, 0, 0],
                          [math.sin(fi), 0, math.cos(fi), 0],
                          [0, 0, 0, 1]])
+        """ Матрица поворота на угол fi """
         self.changes = np.matmul(self.changes, Ry.transpose())
         self.changes = np.matmul(self.changes, Rz.transpose())
         self.changes = np.matmul(self.changes, Rfi.transpose())
