@@ -226,8 +226,8 @@ class Main(QMainWindow):
         qp.setPen(Qt.red)
         for polygon in Polygons:
             for line in polygon.lines:
-                new_a = np.matmul([[line.a.x, line.a.y, line.a.z, 1]], self.projection())
-                new_b = np.matmul([[line.b.x, line.b.y, line.b.z, 1]], self.projection())
+                new_a = np.matmul([[line.a.x, line.a.y, line.a.z, 1]], self.projection(self.center.x, self.center.y))
+                new_b = np.matmul([[line.b.x, line.b.y, line.b.z, 1]], self.projection(self.center.x, self.center.y))
                 qp.drawLine(int(new_a.item(0)/new_a.item(3)), int(new_a.item(1)/new_a.item(3)),
                             int(new_b.item(0)/new_b.item(3)), int(new_b.item(1)/new_b.item(3)))
 
@@ -327,19 +327,19 @@ class Main(QMainWindow):
         self.changes = np.matmul(self.changes, LA.inv(Rz).transpose())
         self.changes = np.matmul(self.changes, LA.inv(Ry).transpose())
 
-    def projection(self):
+    def projection(self, x_p, y_p):
         """ Функция для построения центральной проекции """
-        temp = np.matmul(self.changes, np.matrix([[1, 0, 0, -self.center.x],
-                                                  [0, 1, 0, -self.center.y],
-                                                  [0, 0, 1, -self.center.z],
+        temp = np.matmul(self.changes, np.matrix([[1, 0, 0, -x_p],
+                                                  [0, 1, 0, -y_p],
+                                                  [0, 0, 1, 0],
                                                   [0, 0, 0, 1]]).transpose())
         temp = np.matmul(temp, np.matrix([[1, 0, 0, 0],
                                          [0, 1, 0, 0],
                                          [0, 0, 1, 0],
                                          [0, 0, -1/Z0, 1]]).transpose())
-        temp = np.matmul(temp, np.matrix([[1, 0, 0, self.center.x],
-                                          [0, 1, 0, self.center.y],
-                                          [0, 0, 1, self.center.z],
+        temp = np.matmul(temp, np.matrix([[1, 0, 0, x_p],
+                                          [0, 1, 0, y_p],
+                                          [0, 0, 1, 0],
                                           [0, 0, 0, 1]]).transpose())
         return temp
 
