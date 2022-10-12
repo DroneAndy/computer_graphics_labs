@@ -328,10 +328,20 @@ class Main(QMainWindow):
         self.changes = np.matmul(self.changes, LA.inv(Ry).transpose())
 
     def projection(self):
-        return np.matmul(self.changes, np.matrix([[1, 0, 0, 0],
-                                                 [0, 1, 0, 0],
-                                                 [0, 0, 1, 0],
-                                                 [0, 0, -1/Z0, 1]]).transpose())
+        """ Функция для построения центральной проекции """
+        temp = np.matmul(self.changes, np.matrix([[1, 0, 0, -self.center.x],
+                                                  [0, 1, 0, -self.center.y],
+                                                  [0, 0, 1, -self.center.z],
+                                                  [0, 0, 0, 1]]).transpose())
+        temp = np.matmul(temp, np.matrix([[1, 0, 0, 0],
+                                         [0, 1, 0, 0],
+                                         [0, 0, 1, 0],
+                                         [0, 0, -1/Z0, 1]]).transpose())
+        temp = np.matmul(temp, np.matrix([[1, 0, 0, self.center.x],
+                                          [0, 1, 0, self.center.y],
+                                          [0, 0, 1, self.center.z],
+                                          [0, 0, 0, 1]]).transpose())
+        return temp
 
 
 if __name__ == '__main__':
