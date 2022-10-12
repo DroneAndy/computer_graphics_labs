@@ -15,6 +15,8 @@ BUTTON_X = 100
 BUTTON_DELTA_Y = 50
 """ Смещение второго и последующих рядов кнопок по оси Y относительно предыдущего ряда """
 
+Z0 = -500
+""" Коэффициент проекции """
 
 class Point:
     """ Класс точка """
@@ -223,9 +225,10 @@ class Main(QMainWindow):
         qp.setPen(Qt.red)
         for polygon in Polygons:
             for line in polygon.lines:
-                new_a = np.matmul([[line.a.x, line.a.y, line.a.z, 1]], self.changes)
-                new_b = np.matmul([[line.b.x, line.b.y, line.b.z, 1]], self.changes)
-                qp.drawLine(int(new_a.item(0)), int(new_a.item(1)), int(new_b.item(0)), int(new_b.item(1)))
+                new_a = np.matmul([[line.a.x, line.a.y, line.a.z, 1]], self.projection())
+                new_b = np.matmul([[line.b.x, line.b.y, line.b.z, 1]], self.projection())
+                qp.drawLine(int(new_a.item(0)/new_a.item(3)), int(new_a.item(1)/new_a.item(3)),
+                            int(new_b.item(0)/new_b.item(3)), int(new_b.item(1)/new_b.item(3)))
 
     def rotate_letter(self, angle_x, angle_y, angle_z):
         """
@@ -322,6 +325,12 @@ class Main(QMainWindow):
         self.changes = np.matmul(self.changes, Rfi.transpose())
         self.changes = np.matmul(self.changes, LA.inv(Rz).transpose())
         self.changes = np.matmul(self.changes, LA.inv(Ry).transpose())
+
+    def projection(self):
+        return np.matmul(self.changes, np.matrix([[1, 0, 0, 0],
+                                                 [0, 1, 0, 0],
+                                                 [0, 0, 1, 0],
+                                                 [0, 0, -1/Z0, 1]]).transpose())
 
 
 if __name__ == '__main__':
